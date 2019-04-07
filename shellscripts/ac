@@ -1,0 +1,2 @@
+#!/bin/sh
+acme -f /mnt/font/GoMono/14a/font $HOME & 
