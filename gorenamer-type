@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# The regular expression should be a var name followed by its type name, such as 'router http\.Handler'
+regexpForExistingTypeName=$1
+replacementName=$2
+dryrun=$3
+
+test -z "$regexpForExistingTypeName" && echo 1>&2 'a regular expression is required to find a type name, i.e. 'Handler' for http package && exit 1
+test -z "$replacementName" && echo 1>&2 'a replacement name for the var is required, i.e. 'h' or 'foo' && exit 1
+
+regexpForExistingTypeName=$(echo  "type $regexpForExistingTypeName")
+
+fileNameWithOffset=$( \
+	grep --recursive --byte-offset --only-match "$regexpForExistingTypeName" \
+		| grep '.go:' | cut -d: -f1-2 | sed -e 's/:/:#/'
+)
+test ! 1 = $(echo $fileNameWithOffset | wc -l) && echo 1>&2 'more  than one file matched, try changing directory to a more specific subpackage exiting' && exit 1 
+
+fileName=$(echo $fileNameWithOffset | cut -d# -f1)
+offset=$(echo $fileNameWithOffset | cut -d# -f2)
+offset=$(echo "$offset + 5" | bc)
+
+fileNameWithOffset=$(echo "${fileName}#${offset}")
+
+test ! -z $dryrun && echo "$fileNameWithOffset" && exit 0
+
+gorename --offset "$fileNameWithOffset" -to "$replacementName"
