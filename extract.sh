@@ -9,10 +9,13 @@ tmpDir="/tmp/$$"
 
 zipFile="$1"
 
-test -z "$zipFile" && echoerr 'usage: $0 <zip_file_name>' && exit 1
+test -z "$zipFile" && echoerr "usage: $0 <zip_file_name>" && exit 1
 test ! -f "$zipFile" && echoerr "'$zipFile' does not appear to be a regular file, exiting" && exit 1
+ext=$(echo $zipFile | sed -E 's/^.*\.([a-zA-Z]{3})$/\1/')
+test ! "zip" = "$ext" && echoerr "$zipFile must end with a .zip extension" && exit 1
 
-noExt=$(echo $zipFile | sed 's/\.zip$//')
+noExt=$(echo $zipFile | sed -E 's/\.[a-zA-Z]{3}$//')
+
 targetDir="$noExt"
 test -d "$targetDir" && echoerr "'$targetDir' already exists as a directory, exiting" && exit 1
 

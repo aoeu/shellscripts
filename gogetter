@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# TODO: if $GOROOT is set:
+# cd $GOROOT && test ! "master" = git rev-parse --abbrev-ref HEAD ] && git checkout master && git pull && cd -
+#
+
+# TODO: go build command takes target directory as an argument
+go test ./... 2>&1 | grep 'cannot find package' | sed -e 's/^.*cannot find package "\(.*\)" in any of.*$/\1/g' | xargs go get -u

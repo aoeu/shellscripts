@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# The regular expression should be a var name followed by its type name, such as 'router http\.Handler'
+regexpForExistingVarName=$1
+replacementName=$2
+dryrun=$3
+
+echo $regexpForExistingVarName $replacementName
+
+test -z $regexpForExistingVarName && echo 1>&2 'a regular expression is required to find a var name, i.e. 'router http\.Handler' && exit 1
+test -z $replacementName && echo 1>&2 'a replacement name for the var is required, i.e. 'h' or 'foo' && exit 1
+
+fileNamesWithOffsets=$( \
+	grep --recursive --byte-offset --only-match "$regexpForExistingVarName" | \
+	grep '.go:' | cut -d: -f1-2 | sed -e 's/:/:#/' 
+)
+
+test ! -z $dryrun && echo "$fileNamesWithOffsets" && exit 0
+
+for filenameWithOffset in $fileNamesWithOffsets; do 
+	gorename --offset "$filenameWithOffset" -to "$replacementName"
+done
