@@ -1,6 +1,9 @@
 #!/bin/sh
 
-# The regular expression should be a var name followed by its type name, such as 'router http\.Handler'
+# TODO: combine with gorenamer-var into a script (or fullblown program)
+# that is actually tenable and not merely a quick hack (such as these scripts).
+
+# The regular expression should just the type name, such as 'Handler' for the http package. "type "  is prepended.
 regexpForExistingTypeName=$1
 replacementName=$2
 dryrun=$3
@@ -14,7 +17,7 @@ fileNameWithOffset=$( \
 	grep --recursive --byte-offset --only-match "$regexpForExistingTypeName" \
 		| grep '.go:' | cut -d: -f1-2 | sed -e 's/:/:#/'
 )
-test ! 1 = $(echo $fileNameWithOffset | wc -l) && echo 1>&2 'more  than one file matched, try changing directory to a more specific subpackage exiting' && exit 1 
+test ! 1 = $(echo $fileNameWithOffset | wc -l) && echo 1>&2 'more than one file matched, try changing directory to a more specific subpackage exiting' && exit 1
 
 fileName=$(echo $fileNameWithOffset | cut -d# -f1)
 offset=$(echo $fileNameWithOffset | cut -d# -f2)
