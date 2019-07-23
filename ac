@@ -1,2 +1,3 @@
 #!/bin/sh
-acme -f /mnt/font/GoMono/14a/font $HOME & 
+pgrep plumber >/dev/null || plumber & # Needed for github.com/aoeu/Go to open files in acme with `Go def`
+acme -f /mnt/font/GoMono/14a/font $HOME &
