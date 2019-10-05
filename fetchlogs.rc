@@ -1,0 +1,62 @@
+#!/usr/bin/env rc
+
+fn echoerr { echo $* >[2=1] } 
+
+fn checkdep {
+	which $1 > /dev/null >[2=1] || { 
+		echoerr The $1 command is not found and required.
+		echoerr Try installing it with:
+		echoerr '    ' go get -u $2
+		echoerr '    ' go install $2^/cmd/^$1
+		exit 1
+	}
+}
+
+checkdep now github.com/aoeu/gosh
+checkdep dates github.com/aoeu/gosh 
+checkdep dlsleeplog github.com/aoeu/bitfit
+
+storageDir = $1
+~ $storageDir () && \
+	echoerr 'a directory to output files to must be provided as an argument to this command' && \
+	exit 1
+
+today = `{ now -date }
+~ $today () && \
+	echoerr 'could not determine today''s date' && \
+	exit 1
+
+oneWeekAgo = `{ now -date -minus -days 7 }
+~ $oneWeekAgo () && \
+	echoerr 'could not determine date of two days ago' && \
+	exit 1
+
+nameTemplate = sleep_log_payload
+dlsleeplog \
+	-as sleep_log_payload \
+	-into $storageDir \
+	-from $oneWeekAgo \
+	-to $today \
+	-config $storageDir^/args.json || 
+		{ echoerr 'could not download sleep logs' && exit 1 }
+
+dateRange = `{ dates -from $oneWeekAgo -to $today }
+for (d in $dateRange) {
+	filename = `{ printf %s_%s.json $nameTemplate $d }
+	test -e $filename && git add $filename 
+}
+
+datesAdded= `{ git diff --cached --name-only --diff-filter=ACM | \
+	sed -e s/$nameTemplate^_//  -e s/.json// }
+
+~ $datesAdded () && exit 0 # Nothing to do, so exit.
+
+first = $datesAdded(1)
+last = $datesAdded($#datesAdded)
+commitMessage = 'Add file'
+
+~ $#datesAdded 1 && \
+	commitMessage = `{ printf '%s for %s' $commitMessage $first } || \
+	commitMessage = `{ printf '%ss for %s through %s' $commitMessage $first $last }
+
+~ $datesAdded () || git commit -m $^commitMessage
