@@ -18,6 +18,11 @@ fn processArgs {
 		echoerr 'a directory to output files to must be provided as an argument to this command' &&
 		exit 1
 
+	configFilepath = $2
+	~ $configFilepath () &&
+		echoerr 'the location of a config file for dlsleeplog must be specified' &&
+		exit 1	
+
 	today = `{ now -date }
 	~ $today () &&
 		echoerr 'could not determine today''s date' &&
@@ -37,7 +42,7 @@ fn downloadSleepLogs {
 		-into $storageDir \
 		-from $oneWeekAgo \
 		-to $today \
-		-config $storageDir^/args.json ||
+		-config $configFilepath ||
 			{ echoerr 'could not download sleep logs' && exit 1 }
 }
 
