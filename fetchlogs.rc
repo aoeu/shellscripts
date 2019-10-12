@@ -14,18 +14,18 @@ fn checkdep {
 
 fn processArgs {
 	storageDir = $1
-	~ $storageDir () && \
-		echoerr 'a directory to output files to must be provided as an argument to this command' && \
+	~ $storageDir () &&
+		echoerr 'a directory to output files to must be provided as an argument to this command' &&
 		exit 1
 
 	today = `{ now -date }
-	~ $today () && \
-		echoerr 'could not determine today''s date' && \
+	~ $today () &&
+		echoerr 'could not determine today''s date' &&
 		exit 1
 
 	oneWeekAgo = `{ now -date -minus -days 7 }
-	~ $oneWeekAgo () && \
-		echoerr 'could not determine date of two days ago' && \
+	~ $oneWeekAgo () &&
+		echoerr 'could not determine date of two days ago' &&
 		exit 1
 
 	nameTemplate = sleep_log_payload
@@ -47,34 +47,65 @@ fn stageChanges {
 		filename = `{ printf %s_%s.json $nameTemplate $d }
 		test -e $filename && git add $filename
 	}
+	datesAffected = `{ printStagedDates AM }
+	~ $datesAffected () && exit 0 # Nothing to do, so exit.
+	return 0
+}
 
-	datesAdded = `{ git diff --cached --name-only --diff-filter=ACM | \
+fn printStagedDates {
+	filter = AM
+	switch ($1) {
+	case M m; filter = M
+	case A a; filter = A
+	case AM MA ma am; filter = AM
+	}
+	echo `{ git diff --cached --name-only --diff-filter=$filter |
 		sed -e s/$nameTemplate^_//  -e s/.json// }
-
-	~ $datesAdded () && exit 0 # Nothing to do, so exit.
 }
 
 fn commitChanges {
-	first = $datesAdded(1)
-	last = $datesAdded($#datesAdded)
-	commitMessage = 'Add file'
+	first = $datesAffected(1)
+	last = $datesAffected($#datesAffected)
+	commitSubject = 'Update file'
 
-	~ $#datesAdded 1 && \
-		commitMessage = `{ printf '%s for %s' $commitMessage $first } || \
-		commitMessage = `{ printf '%ss for %s through %s' $commitMessage $first $last }
+	~ $#datesAffected 1 &&
+		commitSubject = `{ printf '%s for %s' $commitSubject $first } ||
+		commitSubject = `{ printf '%ss for %s through %s' $commitSubject $first $last }
 
-	~ $datesAdded () || git commit -m $^commitMessage
+	newline = '
+'
+	datesAdded = $newline ^ `{ printStagedDates A }
+	datesModified = `{ printStagedDates M }
+	~ $datesModifed () && datesModified = $newline ^ None
+	tmpFile = `{ printf '%s/tmp/%s.%s' $HOME $0 $pid }
+
+	cat > $tmpFile << eof
+$commitSubject
+
+Dates added:
+$datesAdded
+
+
+Dates modified:
+$datesModified
+eof
+
+	~ $datesAdded () || git commit -F $tmpFile
 }
 
 fn main {
-	processArgs $* && \
-	downloadSleepLogs && \
-	stageChanges && \
+	processArgs $* &&
+	downloadSleepLogs &&
+	stageChanges &&
 	commitChanges
 }
 
 checkdep now github.com/aoeu/gosh
 checkdep dates github.com/aoeu/gosh
 checkdep dlsleeplog github.com/aoeu/bitfit
+
+test ! -d $HOME/tmp &&
+	echo make a directory at $HOME/tmp to use for temp files, then re-run $0 $* &&
+	exit 0
 
 main $*
