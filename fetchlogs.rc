@@ -111,7 +111,8 @@ fn main {
 	processArgs $* &&
 	downloadSleepLogs &&
 	stageChanges &&
-	commitChanges
+	commitChanges &&
+	_git push
 }
 
 checkdep now github.com/aoeu/gosh
