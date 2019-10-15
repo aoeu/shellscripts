@@ -46,11 +46,15 @@ fn downloadSleepLogs {
 			{ echoerr 'could not download sleep logs' && exit 1 }
 }
 
+fn _git {
+	git -C $storageDir $*
+}
+
 fn stageChanges {
 	dateRange = `{ dates -from $oneWeekAgo -to $today }
 	for (d in $dateRange) {
 		filename = `{ printf %s_%s.json $nameTemplate $d }
-		test -e $filename && git add $filename
+		test -e $storageDir/$filename && _git add $filename
 	}
 	datesAffected = `{ printStagedDates AM }
 	~ $datesAffected () && exit 0 # Nothing to do, so exit.
@@ -64,7 +68,7 @@ fn printStagedDates {
 	case A a; filter = A
 	case AM MA ma am; filter = AM
 	}
-	echo `{ git diff --cached --name-only --diff-filter=$filter |
+	echo `{ _git diff --cached --name-only --diff-filter=$filter |
 		sed -e s/$nameTemplate^_//  -e s/.json// }
 }
 
@@ -95,7 +99,9 @@ Dates modified:
 $datesModified
 eof
 
-	~ $datesAdded () || git commit -F $tmpFile
+	~ $datesAffected () || _git commit -F $tmpFile
+
+	rm $tmpFile
 }
 
 fn main {
