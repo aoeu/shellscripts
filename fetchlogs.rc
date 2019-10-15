@@ -85,18 +85,21 @@ fn commitChanges {
 '
 	datesAdded = $newline ^ `{ printStagedDates A }
 	datesModified = `{ printStagedDates M }
-	~ $datesModifed () && datesModified = $newline ^ None
 	tmpFile = `{ printf '%s/tmp/%s.%s' $HOME $0 $pid }
 
-	cat > $tmpFile << eof
-$commitSubject
+	echo $commitSubject > $tmpFile
+
+	~ $datesAdded () || cat >> $tmpFile << eof
 
 Dates added:
 $datesAdded
+eof
 
+	~ $datesModified () || cat >> $tmpFile << eof
 
 Dates modified:
 $datesModified
+
 eof
 
 	~ $datesAffected () || _git commit -F $tmpFile
