@@ -57,7 +57,6 @@ fn stageChanges {
 		test -e $storageDir/$filename && _git add $filename
 	}
 	datesAffected = `{ printStagedDates AM }
-	~ $datesAffected () && exit 0 # Nothing to do, so exit.
 	return 0
 }
 
@@ -73,6 +72,8 @@ fn printStagedDates {
 }
 
 fn commitChanges {
+	~ $datesAffected () && return 1
+
 	first = $datesAffected(1)
 	last = $datesAffected($#datesAffected)
 	commitSubject = 'Update file'
@@ -81,28 +82,34 @@ fn commitChanges {
 		commitSubject = `{ printf '%s for %s' $commitSubject $first } ||
 		commitSubject = `{ printf '%ss for %s through %s' $commitSubject $first $last }
 
-	newline = '
-'
-	datesAdded = $newline ^ `{ printStagedDates A }
-	datesModified = `{ printStagedDates M }
 	tmpFile = `{ printf '%s/tmp/%s.%s' $HOME $0 $pid }
 
 	echo $commitSubject > $tmpFile
 
-	~ $datesAdded () || cat >> $tmpFile << eof
+	newline = '
+'
+
+	datesAdded = `{ printStagedDates A } &&
+		! ~ $datesAdded () &&
+		datesAdded = $newline ^ $datesAdded &&
+		cat >> $tmpFile << eof
 
 Dates added:
 $datesAdded
 eof
 
-	~ $datesModified () || cat >> $tmpFile << eof
+	datesModified = `{ printStagedDates M } &&
+	! ~ $datesModified () &&
+		datesModified = $newline ^ $datesModified &&
+		cat >> $tmpFile << eof
 
 Dates modified:
 $datesModified
-
 eof
 
-	~ $datesAffected () || _git commit -F $tmpFile
+	test -s $tmpFile &&
+		_git commit -F $tmpFile ||
+		echoerr no commit message found in file named $tmpFile
 
 	rm $tmpFile
 }
@@ -115,6 +122,7 @@ fn main {
 	commitChanges &&
 	_git push
 }
+
 
 checkdep now github.com/aoeu/gosh
 checkdep dates github.com/aoeu/gosh
