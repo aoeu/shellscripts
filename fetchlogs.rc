@@ -109,6 +109,7 @@ eof
 
 fn main {
 	processArgs $* &&
+	_git pull &&
 	downloadSleepLogs &&
 	stageChanges &&
 	commitChanges &&
