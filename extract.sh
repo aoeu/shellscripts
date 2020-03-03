@@ -36,7 +36,7 @@ toMove="$workDir"
 test 1 = $(echo "$contents" | wc -l) && test -d "$workDir/$contents" && toMove="$workDir/$contents"
 
 for f in $(ls --almost-all -1 "$toMove"); do
-	mv "$toMove/$f" $targetDir
+	mv "$toMove/$f" "$targetDir"
 done
 
 # If it existed, remove the single dir that all the "real" contents (now relocated) of the zip file was in.
