@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echoerr() {
+	echo 1>&2
+}
+
+filename="$1"
+
+test -z "$filename" && \
+	echoerr 'a PNG filename to save the screenshot as must be provided' && \
+	echoerr "usage: $0 my-screenshot.png" && \
+	exit 1
+
+adb shell screencap -p /sdcard/"$1" && \
+	adb pull /sdcard/"$1" 1>/dev/null && \
+	adb shell rm /sdcard/"$1"
+
+test ! $? = 0 && \
+	echoerr "screenshot, clean-up, or transferring a file to $PWD/$1 failed" && \
+	echoerr "(try seeing if /sdcard/$1 exists on the android device)" && \
+	exit 1
+
