@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echoerr() {
+	echo 1>&2
+}
+
+screenshotsDir='/sdcard/Pictures/Screenshots'
+
+numScreenshots="$1"
+test -z "$numScreenshots" && numScreenshots="1"
+
+filenames=$(adb shell ls "$screenshotsDir" | tail -"$numScreenshots")
+test -z "$filenames" && \
+	echoerr "no filenames found in the screenshot directory: $screenshotsDir "&& \
+	exit 1
+
+# TODO(aoeu): Assert number of filenames matches argument for requested number of screenshots.
+
+for f in $filenames
+do
+	adb pull "$screenshotsDir"/"$f" 1>/dev/null
+done
