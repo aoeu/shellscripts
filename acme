@@ -1,3 +1,15 @@
 #!/bin/sh
+
+exiterr() {
+	echo $1 1>&2 && exit 1
+}
+
+test -z "$PLAN9" && \
+	exiterr 'environment variable PLAN9 does not appear to be set, exiting'
+
+$PLAN9/bin/fontsrv -p . | grep GoMono >/dev/null || \
+	exiterr 'GoMono font was not found by fontsrv, exiting'
+
 pgrep plumber >/dev/null || plumber & # Needed for github.com/aoeu/Go to open files in acme with `Go def`
-acme -f /mnt/font/GoMono/13a/font $HOME &
+
+$PLAN9/bin/acme -f /mnt/font/GoMono/14a/font $* &
