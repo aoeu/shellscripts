@@ -12,4 +12,8 @@ test $# -eq 1 && test "$1" = "-i" && \
 	sudo sh -c "echo ${s} >> /etc/shells" && \
 	sudo chsh -s "$s" $USER
 
-exec /usr/bin/env fish $*
+source ~/.profile
+s='/usr/local/bin/fish'
+# TODO: Determine why the fish installer on macOS doesn't result in a working `/usr/bin/env fish`.
+test -e "$s" || s="/usr/bin/env fish"
+exec $s $*
