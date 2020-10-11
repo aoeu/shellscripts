@@ -27,7 +27,7 @@ mkdir -p "$workDir"
 
 unzip -q -d "$workDir" "$zipFile"
 
-contents=$(ls --almost-all -1 "$workDir")
+contents=$(ls -A -1 "$workDir")
 
 toMove="$workDir"
 
@@ -35,7 +35,7 @@ toMove="$workDir"
 # Then lets move what is in the single dir, not the single dir itself.
 test 1 = $(echo "$contents" | wc -l) && test -d "$workDir/$contents" && toMove="$workDir/$contents"
 
-for f in $(ls --almost-all -1 "$toMove"); do
+for f in $(ls -A -1 "$toMove"); do
 	mv "$toMove/$f" "$targetDir"
 done
 
