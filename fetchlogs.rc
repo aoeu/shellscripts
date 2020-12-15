@@ -114,13 +114,17 @@ eof
 	rm $tmpFile
 }
 
+fn pushToRemoteRepos {
+	for (repo in `{_git remote}) { _git push $repo --all }
+}
+
 fn main {
 	processArgs $* &&
 	_git pull &&
 	downloadSleepLogs &&
 	stageChanges &&
 	commitChanges &&
-	_git push
+	pushToRemoteRepos
 }
 
 
