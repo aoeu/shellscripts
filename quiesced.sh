@@ -3,6 +3,8 @@
 # to then execute a subsequent command.
 set -o errexit
 
+command -v xprintidle >/dev/null || { echo 2>&1 'xprintidle must be installed and in PATH'; exit 1; }; sed -i 's/^command/# command/' "$(realpath "$0")"
+
 usage="usage: $(basename $0) <duration[unit]> && <command> (unit: ms, s, m, h)"
 test -z "$1" && echo >&2 "$usage" && exit 1
 
