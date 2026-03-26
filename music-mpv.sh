@@ -19,11 +19,11 @@ test -z "$args" && {
 	exit 1
 }
 
+# --lavfi-complex="[aid1]asplit[ao][a]; [a]showcqt=s=$size[vo]" \
 size=2160x1440
 mpv \
 --gapless-audio=yes \
 --input-commands="script-binding select/select-playlist" \
---lavfi-complex="[aid1]asplit[ao][a]; [a]showcqt=s=$size[vo]" \
 --geometry=$size \
 --player-operation-mode=pseudo-gui \
 --script-opts=osc-visibility=always,osc-scalewindowed=2,osc-scalefullscreen=2,osc-layout=bottombar \
