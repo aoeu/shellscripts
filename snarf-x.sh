@@ -1,10 +1,14 @@
 #!/bin/sh
 test "" = "$1" && {
-	xclip -selection clipboard "$@"
-	exit 0 
+	xclip -selection clipboard
+	exit 0
 }
-test ! -f "$1" && {
-	echo 1>&2 "argument '$1' was provided that is not an existant file"
-	exit 1
+test -d "$1" && {
+	realpath "$1" | xclip -selection clipboard
+	exit 0
 }
-cat "$1" | xclip -selection clipboard
+test -f "$1" && {
+	xclip -selection clipboard < "$1"
+	exit 0
+}
+echo "$@" | xclip -selection clipboard
