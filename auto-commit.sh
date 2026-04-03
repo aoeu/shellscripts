@@ -8,10 +8,13 @@ test ! -d '.git' && {
 	echo 2>&1 'not a git repository'
 	exit 1
 }
-pid=$(pgrep "${0#./}") && grep --invert-match --quiet "$$" <<< "$pid" && {
-        echo 2>&1 "an instance of '${0#./}' is already running"
-        exit 1 # TODO(aoeu): support running one instance per repo, not per system
-}
+for pid in $(pgrep "$(basename "${0#./}")")
+do
+	test ! "$pid" = "$$" && test "$PWD" = $(readlink /proc/$pid/cwd) && {
+		echo 2>&1 "an instance of '${0#./}' is already running for this repository with process ID '$pid'"
+		exit 1
+	}
+done
 printf \
 'Until stopped, this script will silently and automatically git commit
 any file edit, rename, creation, or deletion as it occurs to the 
