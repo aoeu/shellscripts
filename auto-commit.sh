@@ -4,14 +4,15 @@
 # a file is moved (with mv) out of the watched repository, which this script cannot
 # realisitically account for, so simply don't do that (and cp with a subsquent rm instead).
 set -o errexit
+cd "$(readlink -f "${1:-.}")" || exit 1
 test ! -d '.git' && {
-	echo 2>&1 'not a git repository'
+	echo >&2 "'$PWD' is not a git repository"
 	exit 1
 }
 for pid in $(pgrep "$(basename "${0#./}")")
 do
 	test ! "$pid" = "$$" && test "$PWD" = $(readlink /proc/$pid/cwd) && {
-		echo 2>&1 "an instance of '${0#./}' is already running for this repository with process ID '$pid'"
+		echo >&2 "an instance of '${0#./}' is already running for this repository with process ID '$pid'"
 		exit 1
 	}
 done
@@ -36,7 +37,7 @@ inotifywait \
 do
 	case $event in
 	*,IS_DIR) continue ;;
-	CREATE|CLOSE_WRITE)
+	CREATE|CLOSE_WRITE|CLOSE_WRITE,CLOSE)
 		test -f "$filepath" && git add "$filepath" && message='change of'
 	;;
 	MOVED_FROM)
